@@ -45,11 +45,14 @@ function LoginPage() {
       }
 
       console.log('Login response:', response.data);
+      const { token, role, roll_number } = response.data; // ✅ Extract roll_number
 
-      const { token, role } = response.data;
-      localStorage.setItem('token', token); // Store the token in localStorage
-
-      setUser({ rollNumber: username, role }); // Set user role in context
+      localStorage.setItem('token', token); 
+      localStorage.setItem('role', role);
+      localStorage.setItem('roll_number', roll_number); // ✅ Store roll_number
+      
+      setUser({ rollNumber: roll_number, role }); // ✅ Use roll_number instead of username
+       // Set user role in context
 
       // Redirect based on the role
       if (role === 'student') {

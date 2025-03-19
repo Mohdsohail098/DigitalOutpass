@@ -12,18 +12,26 @@ const OutpassHistoryPage = () => {
   useEffect(() => {
     fetchOutpasses();
   }, []);
-
   const fetchOutpasses = async () => {
     try {
-      // Fetch only outpasses that are 'Approved' or 'Rejected'
-      const response = await axios.get('http://localhost:5000/api/outpass', { 
-        params: { status: ['Approved', 'Rejected'] } 
+      const response = await axios.get('http://localhost:5000/api/outpasshist', { 
+        params: { status: ["Approved", "Rejected"] }, // ✅ Send as an array
+        paramsSerializer: params => {
+          return Object.keys(params)
+            .map(key => `${encodeURIComponent(key)}=${params[key].map(encodeURIComponent).join("&" + key + "=")}`)
+            .join("&");
+        }
       });
+  
+      console.log("📜 Fetched Outpasses:", response.data);
       setOutpasses(response.data);
     } catch (error) {
-      console.error('Error fetching outpasses:', error);
+      console.error('❌ Error fetching outpasses:', error);
     }
   };
+  
+  
+  
 
   const fetchStudentDetails = async (roll_number) => {
     try {
@@ -53,34 +61,46 @@ const OutpassHistoryPage = () => {
 
       {/* Content */}
       <Container style={{ paddingTop: '80px' }}>
-        <Box mt={4} sx={{ color: '#fff', textAlign: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)', padding: '20px', borderRadius: '8px' }}>
-          <h2>Outpass History - Approved/Rejected Applications</h2>
-          {outpasses.length === 0 ? (
-            <p>No approved or rejected outpass applications.</p>
-          ) : (
-            outpasses.map(outpass => (
-              <div key={outpass._id} style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
-                <p><strong>Roll Number:</strong> {outpass.roll_number}</p>
-                <p><strong>Reason:</strong> {outpass.reason}</p>
-                <p><strong>Status:</strong> {outpass.status}</p>
-                
-                {/* Display student details if fetched */}
-                {students[outpass.roll_number] ? (
-                  <div>
-                    <p><strong>Student Name:</strong> {students[outpass.roll_number].name}</p>
-                    <p><strong>Student Roll Number:</strong> {students[outpass.roll_number].roll_number}</p>
-                    <p><strong>Student Email:</strong> {students[outpass.roll_number].email}</p>
-                    <p><strong>Student Phone Number:</strong> {students[outpass.roll_number].phone_number}</p>
-                  </div>
-                ) : (
-                  <Button onClick={() => fetchStudentDetails(outpass.roll_number)}>
-                    Fetch Student Details
-                  </Button>
-                )}
-              </div>
-            ))
-          )}
-        </Box>
+      <Box mt={4} sx={{ 
+  color: '#000', // Darker text for visibility
+  textAlign: 'center', 
+  backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+  padding: '20px', 
+  borderRadius: '8px' 
+}}>
+  <h2>Outpass History - Approved/Rejected Applications</h2>
+  {outpasses.length === 0 ? (
+    <p>No approved or rejected outpass applications.</p>
+  ) : (
+    outpasses.map(outpass => (
+      <div key={outpass._id} style={{ 
+        marginBottom: '20px', 
+        padding: '10px', 
+        border: '1px solid #aaa', 
+        backgroundColor: 'rgba(255, 255, 255, 1)', 
+        color: '#222' // Darker text for better visibility
+      }}>
+        <p><strong>Roll Number:</strong> {outpass.roll_number}</p>
+        <p><strong>Reason:</strong> {outpass.reason}</p>
+        <p><strong>Status:</strong> {outpass.status}</p>
+
+        {students[outpass.roll_number] ? (
+          <div>
+            <p><strong>Student Name:</strong> {students[outpass.roll_number].name}</p>
+            <p><strong>Student Roll Number:</strong> {students[outpass.roll_number].roll_number}</p>
+            <p><strong>Student Email:</strong> {students[outpass.roll_number].email}</p>
+            <p><strong>Student Phone Number:</strong> {students[outpass.roll_number].phone_number}</p>
+          </div>
+        ) : (
+          <Button onClick={() => fetchStudentDetails(outpass.roll_number)} sx={{ color: '#3f51b5' }}>
+            Fetch Student Details
+          </Button>
+        )}
+      </div>
+    ))
+  )}
+</Box>
+
       </Container>
     </div>
   );

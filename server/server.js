@@ -152,29 +152,6 @@ app.get('/api/outpass', async (req, res) => {
 });
 
 
-// app.post('/api/verifyKey', async (req, res) => {
-//   const { roll_number, entered_key } = req.body;
-
-//   try {
-//     const outpass = await Outpass.findOne({ roll_number });
-
-//     if (!outpass) {
-//       return res.status(404).json({ message: 'Outpass not found' });
-//     }
-
-//     if (outpass.random_key === entered_key) {
-//       console.log(`✅ Key verified for ${roll_number}`);
-//       res.json({ message: 'Key verified, student is allowed to leave' });
-//     } else {
-//       console.log(`❌ Invalid key entered for ${roll_number}`);
-//       res.status(403).json({ message: 'Invalid key, access denied' });
-//     }
-//   } catch (err) {
-//     console.error('❌ Error verifying key:', err);
-//     res.status(500).json({ message: 'Server error' });
-//   }
-// });
-
 
 app.post('/api/verifyKey', async (req, res) => {
   const { roll_number, random_key } = req.body;
@@ -203,10 +180,6 @@ app.post('/api/verifyKey', async (req, res) => {
     return res.status(500).json({ success: false, message: "❌ Server Error!" });
   }
 });
-
-
-
-
 
 
 // Fetch Outpass by Roll Number (Including Key)
@@ -261,6 +234,38 @@ cron.schedule('*/10 * * * *', async () => {
     console.error('❌ Error deleting old outpass requests:', error);
   }
 });
+app.get('/api/outpasshist', async (req, res) => {
+  try {
+    console.log("📥 Received Query Params:", req.query);
+
+    let { status } = req.query;
+
+    if (!status) {
+      return res.status(400).json({ message: "❌ Status parameter is required" });
+    }
+
+    // ✅ Ensure `status` is always an array
+    if (typeof status === "string") {
+      status = status.includes(",") ? status.split(",") : [status]; // 🔥 FIX: Split correctly
+    }
+
+    console.log("🔍 Fetching Outpasses with status:", status);
+
+    const outpasses = await Outpass.find({ status: { $in: status } });
+
+    console.log("📜 Fetched Outpasses:", outpasses);
+    res.json(outpasses);
+  } catch (error) {
+    console.error("❌ Error fetching outpasses:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+
+
+
+
 
 // Use security routes
 app.use(securityRoutes);
