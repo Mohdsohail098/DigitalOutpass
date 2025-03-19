@@ -16,6 +16,7 @@ const port = process.env.PORT || 5000;
 // Middleware
 app.use(express.json());
 app.use(cors());
+app.use(express.urlencoded({ extended: true })); 
 
 // Check if environment variables are loaded correctly
 if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
@@ -150,29 +151,63 @@ app.get('/api/outpass', async (req, res) => {
   }
 });
 
-// Security Verification
+
+// app.post('/api/verifyKey', async (req, res) => {
+//   const { roll_number, entered_key } = req.body;
+
+//   try {
+//     const outpass = await Outpass.findOne({ roll_number });
+
+//     if (!outpass) {
+//       return res.status(404).json({ message: 'Outpass not found' });
+//     }
+
+//     if (outpass.random_key === entered_key) {
+//       console.log(`✅ Key verified for ${roll_number}`);
+//       res.json({ message: 'Key verified, student is allowed to leave' });
+//     } else {
+//       console.log(`❌ Invalid key entered for ${roll_number}`);
+//       res.status(403).json({ message: 'Invalid key, access denied' });
+//     }
+//   } catch (err) {
+//     console.error('❌ Error verifying key:', err);
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// });
+
+
 app.post('/api/verifyKey', async (req, res) => {
-  const { roll_number, entered_key } = req.body;
+  const { roll_number, random_key } = req.body;
+  
+  if (!roll_number || !random_key) {
+    return res.status(400).json({ success: false, message: "⚠ Missing Roll Number or Key!" });
+  }
 
   try {
-    const outpass = await Outpass.findOne({ roll_number });
+    // 🔍 Log what we're searching for
+    console.log("🔍 Searching in DB:", { roll_number, random_key, status: "Approved" });
+
+    // Check if the outpass exists
+    const outpass = await Outpass.findOne({ roll_number, random_key, status: "Approved" });
 
     if (!outpass) {
-      return res.status(404).json({ message: 'Outpass not found' });
+      console.log("❌ No matching record found in DB!");
+      return res.status(400).json({ success: false, message: "❌ Invalid or Expired Outpass!" });
     }
 
-    if (outpass.random_key === entered_key) {
-      console.log(`✅ Key verified for ${roll_number}`);
-      res.json({ message: 'Key verified, student is allowed to leave' });
-    } else {
-      console.log(`❌ Invalid key entered for ${roll_number}`);
-      res.status(403).json({ message: 'Invalid key, access denied' });
-    }
-  } catch (err) {
-    console.error('❌ Error verifying key:', err);
-    res.status(500).json({ message: 'Server error' });
+    console.log("✅ Match found:", outpass);
+    return res.json({ success: true, message: "✅ Exit Granted ", student: outpass.studentName });
+
+  } catch (error) {
+    console.error("❌ Database Error:", error);
+    return res.status(500).json({ success: false, message: "❌ Server Error!" });
   }
 });
+
+
+
+
+
 
 // Fetch Outpass by Roll Number (Including Key)
 app.get('/api/outpass/:roll_number', async (req, res) => {

@@ -15,10 +15,13 @@
     "@mui/icons-material": "^5.15.18",
     "@mui/material": "^5.16.7",
     "axios": "^1.7.2",
+    "html5-qrcode": "^2.3.8",
+    "jsqr": "^1.4.0",
     "qrcode.react": "^4.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-qr-code": "^2.0.15",
+    "react-qr-scanner": "^1.0.0-alpha.11",
     "react-router-dom": "^6.23.1"
   },
   "devDependencies": {
